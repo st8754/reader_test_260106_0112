@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFID 64H Stability Tester Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        #error-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            color: white;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            padding: 2rem;
+        }
+        .code-box {
+            background: #000;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            color: #10b981;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+            border: 1px solid #1e293b;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- 關鍵：連接 TypeScript 入口點 -->
+    <script type="module" src="/index.tsx"></script>
+
+    <!-- 本地執行引導畫面 -->
+    <div id="error-overlay">
+        <div style="max-width: 650px; text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 1.5rem; filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4));">📡</div>
+            <h1 style="font-size: 2.25rem; font-weight: 900; margin-bottom: 1rem; letter-spacing: -0.025em;">本地執行環境檢查</h1>
+            <p style="color: #94a3b8; line-height: 1.7; margin-bottom: 2rem; font-size: 1.1rem;">
+                偵測到您直接從檔案系統 (<span style="color: #f87171; font-weight: bold;">file://</span>) 開啟網頁。<br>
+                基於安全性限制，<strong style="color: #818cf8;">Web Serial 串口通訊</strong> 必須在本地伺服器環境下執行。
+            </p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; text-align: left;">
+                <div style="background: rgba(30, 41, 59, 0.5); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <h3 style="font-weight: bold; margin-bottom: 0.75rem; color: #fbbf24; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em;">標準做法：Vite</h3>
+                    <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.5rem;">請在終端機輸入：</p>
+                    <div class="code-box">npm install && npm run dev</div>
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">完成後開啟：http://localhost:5173</p>
+                </div>
+                
+                <div style="background: rgba(30, 41, 59, 0.5); padding: 1.5rem; border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <h3 style="font-weight: bold; margin-bottom: 0.75rem; color: #60a5fa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em;">方法 B：使用 VS Code</h3>
+                    <ol style="font-size: 0.85rem; color: #cbd5e1; padding-left: 1.2rem; space-y: 0.4rem;">
+                        <li>安裝插件 <strong>Live Server</strong></li>
+                        <li>右下角點擊 <strong>Go Live</strong></li>
+                        <li>自動開啟於 <strong>Port 5500</strong></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if (window.location.protocol === 'file:') {
+            document.getElementById('error-overlay').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
