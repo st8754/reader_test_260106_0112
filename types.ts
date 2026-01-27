@@ -1,5 +1,8 @@
 
+export type CommandType = '64H' | '61H' | '35H';
+
 export interface TestConfig {
+  commandType: CommandType;
   totalCycles: number;
   timeoutMs: number;
   intervalMs: number;
@@ -20,10 +23,12 @@ export interface TestResult {
   rawTx: string;
   rawRx: string;
   recordsFound: number;
+  cmdType: CommandType;
 }
 
 export const ERROR_CODES: Record<string, string> = {
   '0001': '成功 (Success)',
+  '0000': '成功 (Success)',
   '0002': '格式 CRC 錯誤',
   '0003': '格式 CMD 錯誤',
   '0004': '格式 LEN 錯誤',
