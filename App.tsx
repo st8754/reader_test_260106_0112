@@ -15,6 +15,12 @@ interface ExtendedTestResult extends TestResult {
   epcList: string[];
 }
 
+interface LogEntry {
+  timestamp: string;
+  type: 'tx' | 'rx' | 'system' | 'error' | 'info' | 'tag';
+  msg: string;
+}
+
 interface RawLogEntry {
   timestamp: string;
   data: string;
@@ -44,7 +50,7 @@ const App: React.FC = () => {
   });
   const [results, setResults] = useState<ExtendedTestResult[]>([]);
   const [currentCycle, setCurrentCycle] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [rawRxLogs, setRawRxLogs] = useState<RawLogEntry[]>([]);
   
   // 自動捲動控制狀態 - 預設改為關閉 (false)
@@ -58,7 +64,20 @@ const App: React.FC = () => {
   const logEndRef = useRef<HTMLDivElement>(null);
   const rawLogEndRef = useRef<HTMLDivElement>(null);
 
-  const LAST_UPDATED = "2026-01-02 17:05 (UI Layout Optimized)";
+  const LAST_UPDATED = "2026-01-03 17:20 (Precision Sync Update)";
+
+  // 輔助函式：產生包含年月日時分秒與 ms 的時間字串
+  const getFullTimestamp = () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const h = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const s = String(now.getSeconds()).padStart(2, '0');
+    const ms = String(now.getMilliseconds()).padStart(3, '0');
+    return `${y}-${m}-${d} ${h}:${min}:${s}.${ms}`;
+  };
 
   useEffect(() => {
     if (window.location.protocol === 'file:') setIsLocalFile(true);
@@ -77,13 +96,12 @@ const App: React.FC = () => {
   }, [rawRxLogs, autoScrollRaw]);
 
   const addLog = (msg: string, type: 'tx' | 'rx' | 'system' | 'error' | 'info' | 'tag' = 'info') => {
-    const timestamp = new Date().toLocaleTimeString('zh-TW', { hour12: false, fractionalSecondDigits: 3 } as any);
-    const prefix = { tx: '>> ', rx: '<< ', system: '[SYS] ', error: '[ERR] ', info: '  ', tag: '[TAG] ' }[type];
-    setLogs(prev => [...prev, `${timestamp} ${prefix}${msg}`].slice(-500));
+    const timestamp = getFullTimestamp();
+    setLogs(prev => [...prev, { timestamp, type, msg }].slice(-500));
   };
 
   const addRawRxLog = (data: Uint8Array) => {
-    const timestamp = new Date().toLocaleTimeString('zh-TW', { hour12: false, fractionalSecondDigits: 3 } as any);
+    const timestamp = getFullTimestamp();
     const hex = uint8ArrayToHex(data);
     setRawRxLogs(prev => [...prev, { timestamp, data: hex }].slice(-200));
   };
@@ -157,7 +175,7 @@ const App: React.FC = () => {
     await writer.write(txBuffer);
     writer.releaseLock();
     
-    addLog(`TX (${config.commandType}): ${uint8ArrayToHex(txBuffer)}`, 'tx');
+    addLog(`${config.commandType} TX: ${uint8ArrayToHex(txBuffer)}`, 'tx');
     const startTime = Date.now();
     const deadline = startTime + config.timeoutMs + 1000; 
     
@@ -290,7 +308,6 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* 穩定性數據展示 (移至標題列) */}
         <div className="flex items-center gap-8 bg-slate-50 px-8 py-3 rounded-2xl border border-slate-100 mx-4 flex-1 justify-center max-w-sm">
            <div className="flex flex-col items-center">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">穩定性</span>
@@ -478,10 +495,21 @@ const App: React.FC = () => {
               </div>
               <div className="p-6 overflow-y-auto flex-1 font-mono text-[10px] bg-slate-950 custom-scrollbar">
                 {logs.map((log, i) => (
-                  <div key={i} className={`py-0.5 border-l-2 pl-4 mb-1 ${
-                      log.includes(">>") ? "border-indigo-500 text-indigo-300 font-bold" : 
-                      log.includes("EPC:") ? "border-emerald-500 text-emerald-400" : "border-slate-800 text-slate-500"
-                  }`}>{log}</div>
+                  <div key={i} className={`py-1 border-l-2 pl-4 mb-2 flex flex-col ${
+                      log.type === 'tx' ? "border-indigo-500 bg-indigo-500/5" : 
+                      log.type === 'tag' ? "border-emerald-500 bg-emerald-500/5" : 
+                      log.type === 'error' ? "border-rose-500 bg-rose-500/5" : "border-slate-800"
+                  }`}>
+                    <span className="text-[9px] text-slate-500 font-bold tracking-tight mb-0.5 opacity-60">[{log.timestamp}]</span>
+                    <span className={`leading-relaxed ${
+                      log.type === 'tx' ? "text-indigo-300 font-bold" : 
+                      log.type === 'tag' ? "text-emerald-400" : 
+                      log.type === 'error' ? "text-rose-400" : "text-slate-400"
+                    }`}>
+                      {log.type === 'tx' ? '>> ' : log.type === 'tag' ? '[TAG] ' : log.type === 'system' ? '[SYS] ' : ''}
+                      {log.msg}
+                    </span>
+                  </div>
                 ))}
                 <div ref={logEndRef} />
               </div>
@@ -503,9 +531,14 @@ const App: React.FC = () => {
               </div>
               <div className="p-6 overflow-y-auto flex-1 font-mono text-[10px] bg-black text-emerald-500/80 custom-scrollbar leading-relaxed">
                 {rawRxLogs.map((log, i) => (
-                  <div key={i} className="mb-2 opacity-80 border-b border-emerald-900/30 pb-1">
-                    <span className="text-emerald-900 font-bold mr-3">[{log.timestamp}]</span>
-                    {log.data}
+                  <div key={i} className="mb-2 opacity-90 border-b border-emerald-900/30 pb-2">
+                    <div className="text-emerald-600 font-black mb-1 flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" />
+                      <span>[{log.timestamp}]</span>
+                    </div>
+                    <div className="break-all tracking-wider text-emerald-500/90 font-medium bg-emerald-950/20 p-1.5 rounded-md">
+                      {log.data}
+                    </div>
                   </div>
                 ))}
                 <div ref={rawLogEndRef} />
