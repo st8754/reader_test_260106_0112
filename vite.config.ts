@@ -12,7 +12,7 @@ export default defineConfig({
     host: true, // 允許透過區域網路 IP 訪問
   },
   build: {
-    outDir: 'dist',
+    outDir: 'docs',
     sourcemap: true,
   }
 });
